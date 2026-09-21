@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+cache_dir = ".cache/pytest_cache"
+
+[tool.mypy]
+cache_dir = ".cache/mypy_cache"
+
+[tool.ruff]
+cache-dir = ".cache/ruff_cache"
+
+[tool.black]
+cache-dir = ".cache/black_cache"
