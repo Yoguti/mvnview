@@ -1,0 +1,1 @@
+This folder contains the intermediate .npz files extracted from the original .mvnx raw data.

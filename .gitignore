@@ -39,6 +39,6 @@ pip-wheel-metadata/
 .DS_Store
 Thumbs.db
 
-# Ignore file folders inside /capture_data/ directory
-capture_data/converted_npz/
-capture_data/raw_mvnx/
+# Ignore generated capture files, but keep the folders and info.txt files
+capture_data/converted_npz/files/**/*.npz
+capture_data/raw_mvnx/files/**/*.mvnx
