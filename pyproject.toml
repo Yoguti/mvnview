@@ -9,3 +9,6 @@ cache-dir = ".cache/ruff_cache"
 
 [tool.black]
 cache-dir = ".cache/black_cache"
+
+[tool.setuptools.packages.find]
+include = ["mvnview*"]

@@ -108,6 +108,25 @@ class MocapData:
 			raise ValueError(f"Segmento '{name}' não encontrado.")
 		return np.where(self.segment_names == name)[0][0]
 
+	def _joint_index(self, name):
+		if self.joint_names is None or name not in self.joint_names:
+			raise ValueError(f"Junta '{name}' não encontrada.")
+		return np.where(self.joint_names == name)[0][0]
+
+	def _get_joint_angle(self, name, attribute):
+		index = self._joint_index(name)
+		angles = getattr(self, attribute)
+		if angles is None:
+			raise ValueError(f"Dados de ângulo '{attribute}' não disponíveis.")
+		start = index * 3
+		return angles[:, start:start + 3]
+
+	def get_joint_angle(self, name):
+		return self._get_joint_angle(name, "jointAngle")
+
+	def get_joint_angle_xzy(self, name):
+		return self._get_joint_angle(name, "jointAngleXZY")
+
 	def get_full_segment_data(self, name):
 		index = self._segment_index(name)
 		position_start = index * 3

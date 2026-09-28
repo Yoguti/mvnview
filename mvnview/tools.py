@@ -8,6 +8,25 @@ from .MocapData import MocapData
 def load(*args, **kwargs):
     return MVNX(*args, **kwargs)
 
+def better_orientation(data):
+    if data.segment_names is None:
+        print("None")
+        return
+    names = []
+    for name in data.segment_names:
+        names.append(str(name))
+
+    frame_num = data.orientation.shape[0]
+    segment_num = len(names)
+
+    reshaped_ori = data.orientation.reshape(frame_num, segment_num, 4)
+
+    better_orientation_dict = {}
+    for i, name in enumerate(names):
+        better_orientation_dict[name] = reshaped_ori[:, i, :]
+        
+    return better_orientation_dict
+
 
 def print_segment_names(data):
     print("Segmentos:")
