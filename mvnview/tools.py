@@ -1,4 +1,5 @@
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 import numpy as np
 
@@ -8,25 +9,23 @@ from .MocapData import MocapData
 def load(*args, **kwargs):
     return MVNX(*args, **kwargs)
 
-def better_orientation(data):
-    if data.segment_names is None:
-        print("None")
-        return
-    names = []
-    for name in data.segment_names:
-        names.append(str(name))
+def print_ergonomic_joint_relations(mvnx_path):
+    root = ET.parse(mvnx_path).getroot()
+    definitions = next(
+        element for element in root.iter()
+        if element.tag.rsplit("}", 1)[-1] == "ergonomicJointAngles"
+    )
+    joints = sorted(
+        definitions,
+        key=lambda element: int(element.attrib["index"]),
+    )
 
-    frame_num = data.orientation.shape[0]
-    segment_num = len(names)
-
-    reshaped_ori = data.orientation.reshape(frame_num, segment_num, 4)
-
-    better_orientation_dict = {}
-    for i, name in enumerate(names):
-        better_orientation_dict[name] = reshaped_ori[:, i, :]
-        
-    return better_orientation_dict
-
+    print(f"{'Index':>5}  {'Label':<24} {'Relação':<32} Índices das colunas na matriz")
+    for joint in joints:
+        index = int(joint.attrib["index"])
+        relation = f"{joint.attrib['parentSegment']} -> {joint.attrib['childSegment']}"
+        columns = f"{index * 3}, {index * 3 + 1}, {index * 3 + 2}"
+        print(f"{index:>5}  {joint.attrib['label']:<24} {relation:<32} {columns}")
 
 def print_segment_names(data):
     print("Segmentos:")

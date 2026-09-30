@@ -2,7 +2,88 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_segment_position(data, segment_name):
+def _time_axis(frame_count, fps):
+	if fps <= 0:
+		raise ValueError("O valor de fps deve ser maior que zero.")
+	return np.arange(frame_count) / fps
+
+
+def _plot_joint_angle_histogram(data, segment_name, component, angle_name,attr_bins, title):
+	values = np.asarray(data.get_joint_angle_xzy(segment_name)[:, component], dtype=float)
+	if values.ndim != 1:
+		raise ValueError(f"O ângulo de {angle_name} deve ter o formato (frames,).")
+	if not np.isfinite(values).all():
+		raise ValueError(f"O ângulo de {angle_name} contém valores não finitos.")
+	plt.figure(figsize=(10, 6))
+	plt.hist(values, bins=attr_bins, color="skyblue", edgecolor="black")
+	plt.title(title)
+	plt.xlabel("Ângulo (°)")
+	plt.ylabel("Frequência")
+	plt.grid(axis="y")
+	plt.show()
+
+
+def plot_abduction_histogram(data, segment_name, attr_bins, title):
+	_plot_joint_angle_histogram(data, segment_name, 0, "abdução", attr_bins, title)
+
+
+def plot_rotation_histogram(data, segment_name, attr_bins, title):
+	_plot_joint_angle_histogram(data, segment_name, 1, "rotação", attr_bins, title)
+
+
+def plot_flexion_histogram(data, segment_name, attr_bins, title):
+	_plot_joint_angle_histogram(data, segment_name, 2, "flexão", attr_bins, title)
+
+def plot_abduction_byframe(data, segment_name, title, fps=60):
+	abduction = np.asarray(data.get_joint_angle_xzy(segment_name)[:, 0], dtype=float)
+	if abduction.ndim != 1:
+		raise ValueError("O ângulo de abdução deve ter o formato (frames,).")
+	if not np.isfinite(abduction).all():
+		raise ValueError("O ângulo de abdução contém valores não finitos.")
+	time = _time_axis(len(abduction), fps)
+	plt.figure(figsize=(10, 6))
+	plt.plot(time, abduction, color="tab:blue", linewidth=1.5)
+	plt.title(title)
+	plt.xlabel("Tempo (s)")
+	plt.ylabel("Ângulo (°)")
+	plt.grid()
+	plt.show()
+
+def plot_rotation_byframe(data, segment_name, title, fps=60):
+	rotation = np.asarray(data.get_joint_angle_xzy(segment_name)[:, 1], dtype=float)
+	if rotation.ndim != 1:
+		raise ValueError("O ângulo de abdução deve ter o formato (frames,).")
+	if not np.isfinite(rotation).all():
+		raise ValueError("O ângulo de abdução contém valores não finitos.")
+	time = _time_axis(len(rotation), fps)
+	plt.figure(figsize=(10, 6))
+	plt.plot(time, rotation, color="tab:blue", linewidth=1.5)
+	plt.title(title)
+	plt.xlabel("Tempo (s)")
+	plt.ylabel("Ângulo (°)")
+	plt.grid()
+	plt.show()
+
+
+def plot_flexion_byframe(data, segment_name, title, fps=60):
+	flexion = np.asarray(data.get_joint_angle_xzy(segment_name)[:, 2], dtype=float)
+	if flexion.ndim != 1:
+		raise ValueError("O ângulo de abdução deve ter o formato (frames,).")
+	if not np.isfinite(flexion).all():
+		raise ValueError("O ângulo de abdução contém valores não finitos.")
+	time = _time_axis(len(flexion), fps)
+	plt.figure(figsize=(10, 6))
+	plt.plot(time, flexion, color="tab:blue", linewidth=1.5)
+	plt.title(title)
+	plt.xlabel("Tempo (s)")
+	plt.ylabel("Ângulo (°)")
+	plt.grid()
+	plt.show()
+
+
+
+
+def plot_segment_position(data, segment_name, title):
 	segment_position = np.asarray(data.get_segment_position(segment_name), dtype=float)
 	if segment_position.ndim != 2 or segment_position.shape[1] != 3:
 		raise ValueError("A posição do segmento deve ter o formato (frames, 3).")
@@ -16,7 +97,7 @@ def plot_segment_position(data, segment_name):
 	ax.plot(*segment_position.T, color="tab:blue", linewidth=1.5, label="trajetória do segmento")
 	ax.scatter(*first_position, color="tab:green", s=50, label=f"início (altura z = {first_position[2]:.3f} m)")
 	ax.scatter(*last_position, color="tab:red", s=50, label=f"fim (altura z = {last_position[2]:.3f} m)")
-	ax.set_title(f"Movimento do {segment_name} através do espaço")
+	ax.set_title(title)
 	ax.set_xlabel("X  (m)")
 	ax.set_ylabel("Y  (m)")
 	ax.set_zlabel("Z  (m)")
@@ -32,7 +113,7 @@ def plot_segment_position(data, segment_name):
 	plt.show()
 
 
-def plot_flat_segment_position(data, segment_name):
+def plot_flat_segment_position(data, segment_name, title):
 	segment_position = np.asarray(data.get_segment_position(segment_name), dtype=float)
 	if segment_position.ndim != 2 or segment_position.shape[1] != 3:
 		raise ValueError("A posição do segmento deve ter o formato (frames, 3).")
@@ -46,7 +127,7 @@ def plot_flat_segment_position(data, segment_name):
 	ax.plot(segment_position[:, 0], segment_position[:, 1], np.zeros(len(segment_position)), color="tab:blue", linewidth=1.5, label="trajetória do segmento (plano XY)")
 	ax.scatter(first_position[0], first_position[1], 0, color="tab:green", s=50, label="início")
 	ax.scatter(last_position[0], last_position[1], 0, color="tab:red", s=50, label="fim")
-	ax.set_title(f"Movimento plano do {segment_name}")
+	ax.set_title(title)
 	ax.set_xlabel("X  (m)")
 	ax.set_ylabel("Y  (m)")
 	ax.set_zlabel("")
@@ -63,60 +144,63 @@ def plot_flat_segment_position(data, segment_name):
 	plt.show()
 
 
-def _plot_scalar(data, segment_name, getter, title, ylabel):
+def _plot_scalar(data, segment_name, getter, title, ylabel, fps):
 	values = np.asarray(getter(segment_name), dtype=float)
 	if values.ndim != 2 or values.shape[1] != 3:
 		raise ValueError("Os dados do segmento devem ter o formato (frames, 3).")
 	if not np.isfinite(values).all():
 		raise ValueError("Os dados do segmento contêm valores não finitos.")
+	time = _time_axis(values.shape[0], fps)
 	plt.figure(figsize=(10, 6))
-	plt.plot(np.linalg.norm(values, axis=1), color="tab:blue", linewidth=1.5)
-	plt.title(f"{title} do {segment_name} ao longo do tempo")
-	plt.xlabel("Frames")
+	plt.plot(time, np.linalg.norm(values, axis=1), color="tab:blue", linewidth=1.5)
+	plt.title(title)
+	plt.xlabel("Tempo (s)")
 	plt.ylabel(ylabel)
 	plt.grid()
 	plt.show()
 
 
-def _plot_components(data, segment_name, getter, title, ylabel):
+def _plot_components(data, segment_name, getter, title, ylabel, fps):
 	values = np.asarray(getter(segment_name), dtype=float)
 	if values.ndim != 2 or values.shape[1] != 3:
 		raise ValueError("Os dados do segmento devem ter o formato (frames, 3).")
 	if not np.isfinite(values).all():
 		raise ValueError("Os dados do segmento contêm valores não finitos.")
+	time = _time_axis(values.shape[0], fps)
 	plt.figure(figsize=(10, 6))
 	for index, color, label in ((0, "tab:red", "Componente X"), (1, "tab:green", "Componente Y"), (2, "tab:blue", "Componente Z")):
-		plt.plot(values[:, index], color=color, linewidth=1.5, label=label)
-	plt.title(f"Componentes {title} do {segment_name} ao longo do tempo")
-	plt.xlabel("Frames")
+		plt.plot(time, values[:, index], color=color, linewidth=1.5, label=label)
+	plt.title(title)
+	plt.xlabel("Tempo (s)")
 	plt.ylabel(ylabel)
 	plt.legend()
 	plt.grid()
 	plt.show()
 
 
-def plot_segment_scalar_velocity(data, segment_name):
-	_plot_scalar(data, segment_name, data.get_segment_velocity, "Velocidade escalar", "Velocidade (m/s)")
+
+def plot_segment_scalar_velocity(data, segment_name, title, fps=60):
+	_plot_scalar(data, segment_name, data.get_segment_velocity, title, "Velocidade (m/s)", fps)
 
 
-def plot_segment_scalar_acceleration(data, segment_name):
-	_plot_scalar(data, segment_name, data.get_segment_acceleration, "Aceleração escalar", "Aceleração (m/s²)")
+def plot_segment_scalar_acceleration(data, segment_name, title, fps=60):
+	_plot_scalar(data, segment_name, data.get_segment_acceleration, title, "Aceleração (m/s²)", fps)
 
 
-def plot_segment_scalar_angular_velocity(data, segment_name):
-	_plot_scalar(data, segment_name, data.get_segment_angular_velocity, "Velocidade angular escalar", "Velocidade angular (rad/s)")
+def plot_segment_scalar_angular_velocity(data, segment_name, title, fps=60):
+	_plot_scalar(data, segment_name, data.get_segment_angular_velocity, title, "Velocidade angular (rad/s)", fps)
 
 
-def plot_segment_scalar_angular_acceleration(data, segment_name):
-	_plot_scalar(data, segment_name, data.get_segment_angular_acceleration, "Aceleração angular escalar", "Aceleração angular (rad/s²)")
+def plot_segment_scalar_angular_acceleration(data, segment_name, title, fps=60):
+	_plot_scalar(data, segment_name, data.get_segment_angular_acceleration, title, "Aceleração angular (rad/s²)", fps)
 
 
-def plot_segment_velocity_components(data, segment_name):
-	_plot_components(data, segment_name, data.get_segment_velocity, "da velocidade", "Velocidade (m/s)")
+def plot_segment_velocity_components(data, segment_name, title, fps=60):
+	_plot_components(data, segment_name, data.get_segment_velocity, title, "Velocidade (m/s)", fps)
 
 
-def plot_segment_acceleration_components(data, segment_name):
-	_plot_components(data, segment_name, data.get_segment_acceleration, "da aceleração", "Aceleração (m/s²)")
+def plot_segment_acceleration_components(data, segment_name, title, fps=60):
+	_plot_components(data, segment_name, data.get_segment_acceleration, title, "Aceleração (m/s²)", fps)
 
 
 __all__ = [name for name in globals() if name.startswith("plot_")]
