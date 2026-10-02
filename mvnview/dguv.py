@@ -17,7 +17,7 @@ from typing import Iterable, Sequence
 
 
 GREEN, YELLOW, ORANGE, RED = "green", "yellow", "orange", "red"
-ZONE_ORDER = (GREEN, YELLOW, ORANGE, RED)  # da menos para a mais severa
+ZONE_ORDER = (GREEN, YELLOW, ORANGE, RED)
 COLORS = {GREEN: "#7CFC00", YELLOW: "#FFD700", ORANGE: "#FFA500", RED: "#FF4444"}
 ZONE_LABELS = {
 	GREEN: "Verde: neutro/aceitável",

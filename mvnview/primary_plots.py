@@ -41,8 +41,8 @@ def _histogram_bins(values, attr_bins, rule):
 	return np.unique(np.concatenate([edges, inside]))
 
 
-def _plot_joint_angle_histogram(data, segment_name, component, angle_name, attr_bins, title, rule=None):
-	values = np.asarray(data.get_joint_angle_xzy(segment_name)[:, component], dtype=float)
+def _plot_joint_angle_histogram(data, segment_name, component, angle_name, attr_bins, title, rule, getter):
+	values = np.asarray(getter(segment_name)[:, component], dtype=float)
 	if values.ndim != 1:
 		raise ValueError(f"O ângulo de {angle_name} deve ter o formato (frames,).")
 	if not np.isfinite(values).all():
@@ -75,18 +75,30 @@ def _plot_joint_angle_histogram(data, segment_name, component, angle_name, attr_
 
 
 def plot_abduction_histogram(data, segment_name, attr_bins, title, rule=None):
-	_plot_joint_angle_histogram(data, segment_name, 0, "abdução", attr_bins, title, rule)
+	_plot_joint_angle_histogram(data, segment_name, 0, "abdução", attr_bins, title, rule, data.get_joint_angle)
 
 
 def plot_rotation_histogram(data, segment_name, attr_bins, title, rule=None):
-	_plot_joint_angle_histogram(data, segment_name, 1, "rotação", attr_bins, title, rule)
+	_plot_joint_angle_histogram(data, segment_name, 1, "rotação", attr_bins, title, rule, data.get_joint_angle)
 
 
 def plot_flexion_histogram(data, segment_name, attr_bins, title, rule=None):
-	_plot_joint_angle_histogram(data, segment_name, 2, "flexão", attr_bins, title, rule)
+	_plot_joint_angle_histogram(data, segment_name, 2, "flexão", attr_bins, title, rule, data.get_joint_angle)
 
-def _plot_joint_angle_byframe(data, segment_name, component, angle_name, title, fps, rule):
-	values = np.asarray(data.get_joint_angle_xzy(segment_name)[:, component], dtype=float)
+
+def plot_abduction_histogram_xzy(data, segment_name, attr_bins, title, rule=None):
+	_plot_joint_angle_histogram(data, segment_name, 0, "abdução", attr_bins, title, rule, data.get_joint_angle_xzy)
+
+
+def plot_rotation_histogram_xzy(data, segment_name, attr_bins, title, rule=None):
+	_plot_joint_angle_histogram(data, segment_name, 1, "rotação", attr_bins, title, rule, data.get_joint_angle_xzy)
+
+
+def plot_flexion_histogram_xzy(data, segment_name, attr_bins, title, rule=None):
+	_plot_joint_angle_histogram(data, segment_name, 2, "flexão", attr_bins, title, rule, data.get_joint_angle_xzy)
+
+def _plot_joint_angle_byframe(data, segment_name, component, angle_name, title, fps, rule, getter):
+	values = np.asarray(getter(segment_name)[:, component], dtype=float)
 	if values.ndim != 1:
 		raise ValueError(f"O ângulo de {angle_name} deve ter o formato (frames,).")
 	if not np.isfinite(values).all():
@@ -134,15 +146,27 @@ def _plot_joint_angle_byframe(data, segment_name, component, angle_name, title, 
 
 
 def plot_abduction_byframe(data, segment_name, title, fps=60, rule=None):
-	_plot_joint_angle_byframe(data, segment_name, 0, "abdução", title, fps, rule)
+	_plot_joint_angle_byframe(data, segment_name, 0, "abdução", title, fps, rule, data.get_joint_angle)
 
 
 def plot_rotation_byframe(data, segment_name, title, fps=60, rule=None):
-	_plot_joint_angle_byframe(data, segment_name, 1, "rotação", title, fps, rule)
+	_plot_joint_angle_byframe(data, segment_name, 1, "rotação", title, fps, rule, data.get_joint_angle)
 
 
 def plot_flexion_byframe(data, segment_name, title, fps=60, rule=None):
-	_plot_joint_angle_byframe(data, segment_name, 2, "flexão", title, fps, rule)
+	_plot_joint_angle_byframe(data, segment_name, 2, "flexão", title, fps, rule, data.get_joint_angle)
+
+
+def plot_abduction_byframe_xzy(data, segment_name, title, fps=60, rule=None):
+	_plot_joint_angle_byframe(data, segment_name, 0, "abdução", title, fps, rule, data.get_joint_angle_xzy)
+
+
+def plot_rotation_byframe_xzy(data, segment_name, title, fps=60, rule=None):
+	_plot_joint_angle_byframe(data, segment_name, 1, "rotação", title, fps, rule, data.get_joint_angle_xzy)
+
+
+def plot_flexion_byframe_xzy(data, segment_name, title, fps=60, rule=None):
+	_plot_joint_angle_byframe(data, segment_name, 2, "flexão", title, fps, rule, data.get_joint_angle_xzy)
 
 
 
